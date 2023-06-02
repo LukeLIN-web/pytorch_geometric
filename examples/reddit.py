@@ -7,8 +7,7 @@ from tqdm import tqdm
 
 from torch_geometric.datasets import Reddit
 from torch_geometric.loader import NeighborLoader
-from torch_geometric.nn import SAGEConv
-
+from torch_geometric.nn.models.basic_gnn import GraphSAGE
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 path = osp.join(osp.dirname(osp.realpath(__file__)), '..', 'data', 'Reddit')
@@ -23,52 +22,11 @@ train_loader = NeighborLoader(data, input_nodes=data.train_mask,
 
 subgraph_loader = NeighborLoader(copy.copy(data), input_nodes=None,
                                  num_neighbors=[-1], shuffle=False, **kwargs)
-
-# No need to maintain these features during evaluation:
-del subgraph_loader.data.x, subgraph_loader.data.y
 # Add global node index information.
 subgraph_loader.data.num_nodes = data.num_nodes
 subgraph_loader.data.n_id = torch.arange(data.num_nodes)
 
-
-class SAGE(torch.nn.Module):
-    def __init__(self, in_channels, hidden_channels, out_channels):
-        super().__init__()
-        self.convs = torch.nn.ModuleList()
-        self.convs.append(SAGEConv(in_channels, hidden_channels))
-        self.convs.append(SAGEConv(hidden_channels, out_channels))
-
-    def forward(self, x, edge_index):
-        for i, conv in enumerate(self.convs):
-            x = conv(x, edge_index)
-            if i < len(self.convs) - 1:
-                x = x.relu_()
-                x = F.dropout(x, p=0.5, training=self.training)
-        return x
-
-    @torch.no_grad()
-    def inference(self, x_all, subgraph_loader):
-        pbar = tqdm(total=len(subgraph_loader.dataset) * len(self.convs))
-        pbar.set_description('Evaluating')
-
-        # Compute representations of nodes layer by layer, using *all*
-        # available edges. This leads to faster computation in contrast to
-        # immediately computing the final representations of each batch:
-        for i, conv in enumerate(self.convs):
-            xs = []
-            for batch in subgraph_loader:
-                x = x_all[batch.n_id.to(x_all.device)].to(device)
-                x = conv(x, batch.edge_index.to(device))
-                if i < len(self.convs) - 1:
-                    x = x.relu_()
-                xs.append(x[:batch.batch_size].cpu())
-                pbar.update(batch.batch_size)
-            x_all = torch.cat(xs, dim=0)
-        pbar.close()
-        return x_all
-
-
-model = SAGE(dataset.num_features, 256, dataset.num_classes).to(device)
+model = GraphSAGE(dataset.num_features, 256, dataset.num_classes).to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
 
 
@@ -99,7 +57,7 @@ def train(epoch):
 @torch.no_grad()
 def test():
     model.eval()
-    y_hat = model.inference(data.x, subgraph_loader).argmax(dim=-1)
+    y_hat = model.inference(subgraph_loader,device=device).argmax(dim=-1)
     y = data.y.to(y_hat.device)
 
     accs = []
@@ -109,8 +67,8 @@ def test():
 
 
 for epoch in range(1, 11):
-    loss, acc = train(epoch)
-    print(f'Epoch {epoch:02d}, Loss: {loss:.4f}, Approx. Train: {acc:.4f}')
+    # loss, acc = train(epoch)
+    # print(f'Epoch {epoch:02d}, Loss: {loss:.4f}, Approx. Train: {acc:.4f}')
     train_acc, val_acc, test_acc = test()
     print(f'Epoch: {epoch:02d}, Train: {train_acc:.4f}, Val: {val_acc:.4f}, '
           f'Test: {test_acc:.4f}')

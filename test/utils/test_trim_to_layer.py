@@ -191,7 +191,7 @@ def test_trim_to_layer_with_neighbor_loader():
     model = GNN(num_layers=3)
     out1 = model(batch.x, batch.edge_index, batch.edge_weight)[:2]
     assert out1.size() == (2, 16)
-
+    
     out2 = model(batch.x, batch.edge_index, batch.edge_weight,
                  batch.num_sampled_nodes, batch.num_sampled_edges)[:2]
     assert out2.size() == (2, 16)

@@ -131,7 +131,7 @@ class TGNMemory(torch.nn.Module):
         msg_s, t_s, src_s, dst_s = self._compute_msg(n_id, self.msg_s_store,
                                                      self.msg_s_module)
 
-        # Compute messages (dst -> src).
+        # Compute messages (dst -> src). 通过之前的节点特征
         msg_d, t_d, src_d, dst_d = self._compute_msg(n_id, self.msg_d_store,
                                                      self.msg_d_module)
 
@@ -139,10 +139,10 @@ class TGNMemory(torch.nn.Module):
         idx = torch.cat([src_s, src_d], dim=0)
         msg = torch.cat([msg_s, msg_d], dim=0)
         t = torch.cat([t_s, t_d], dim=0)
-        aggr = self.aggr_module(msg, self._assoc[idx], t, n_id.size(0))
+        aggr = self.aggr_module(msg, self._assoc[idx], t, n_id.size(0)) # 取最近的一个. 
 
         # Get local copy of updated memory.
-        memory = self.gru(aggr, self.memory[n_id])
+        memory = self.gru(aggr, self.memory[n_id])# 更新节点特征 
 
         # Get local copy of updated `last_update`.
         dim_size = self.last_update.size(0)

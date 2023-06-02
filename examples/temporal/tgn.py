@@ -40,6 +40,9 @@ data = data.to(device)
 min_dst_idx, max_dst_idx = int(data.dst.min()), int(data.dst.max())
 train_data, val_data, test_data = data.train_val_test_split(
     val_ratio=0.15, test_ratio=0.15)
+# print(train_data[:10])
+# for i in range(10):
+    # print(train_data[i].src, train_data[i].dst, train_data[i].t, train_data[i].y)
 
 train_loader = TemporalDataLoader(train_data, batch_size=200)
 val_loader = TemporalDataLoader(val_data, batch_size=200)
@@ -84,7 +87,7 @@ memory = TGNMemory(
     memory_dim,
     time_dim,
     message_module=IdentityMessage(data.msg.size(-1), memory_dim, time_dim),
-    aggregator_module=LastAggregator(),
+    aggregator_module=LastAggregator(), # 最近的一个. 也可以用mean
 ).to(device)
 
 gnn = GraphAttentionEmbedding(
@@ -131,16 +134,16 @@ def train():
         # Get updated memory of all nodes involved in the computation.
         z, last_update = memory(n_id)
         z = gnn(z, last_update, edge_index, data.t[e_id].to(device),
-                data.msg[e_id].to(device))
+                data.msg[e_id].to(device)) # 第一步
 
-        pos_out = link_pred(z[assoc[src]], z[assoc[pos_dst]])
+        pos_out = link_pred(z[assoc[src]], z[assoc[pos_dst]]) # 第二步
         neg_out = link_pred(z[assoc[src]], z[assoc[neg_dst]])
 
-        loss = criterion(pos_out, torch.ones_like(pos_out))
+        loss = criterion(pos_out, torch.ones_like(pos_out)) # 第三步
         loss += criterion(neg_out, torch.zeros_like(neg_out))
 
         # Update memory and neighbor loader with ground-truth state.
-        memory.update_state(src, pos_dst, t, msg)
+        memory.update_state(src, pos_dst, t, msg) # 第4 - 6 steps
         neighbor_loader.insert(src, pos_dst)
 
         loss.backward()

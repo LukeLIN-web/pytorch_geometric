@@ -8,6 +8,7 @@ from tqdm import tqdm
 from torch_geometric.datasets import Reddit
 from torch_geometric.loader import NeighborLoader
 from torch_geometric.nn.models.basic_gnn import GraphSAGE
+
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 path = osp.join(osp.dirname(osp.realpath(__file__)), '..', 'data', 'Reddit')
@@ -57,7 +58,7 @@ def train(epoch):
 @torch.no_grad()
 def test():
     model.eval()
-    y_hat = model.inference(subgraph_loader,device=device).argmax(dim=-1)
+    y_hat = model.inference(subgraph_loader, device=device).argmax(dim=-1)
     y = data.y.to(y_hat.device)
 
     accs = []

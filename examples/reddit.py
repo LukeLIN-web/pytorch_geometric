@@ -1,4 +1,3 @@
-import copy
 import os.path as osp
 
 import torch
@@ -7,7 +6,7 @@ from tqdm import tqdm
 
 from torch_geometric.datasets import Reddit
 from torch_geometric.loader import NeighborLoader
-from torch_geometric.nn.models.basic_gnn import GraphSAGE
+from torch_geometric.nn import GraphSAGE
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -21,13 +20,11 @@ kwargs = {'batch_size': 1024, 'num_workers': 6, 'persistent_workers': True}
 train_loader = NeighborLoader(data, input_nodes=data.train_mask,
                               num_neighbors=[25, 10], shuffle=True, **kwargs)
 
-subgraph_loader = NeighborLoader(copy.copy(data), input_nodes=None,
-                                 num_neighbors=[-1], shuffle=False, **kwargs)
-# Add global node index information.
-subgraph_loader.data.num_nodes = data.num_nodes
-subgraph_loader.data.n_id = torch.arange(data.num_nodes)
+subgraph_loader = NeighborLoader(data, input_nodes=None, num_neighbors=[-1],
+                                 shuffle=False, **kwargs)
 
-model = GraphSAGE(dataset.num_features, 256, dataset.num_classes).to(device)
+model = GraphSAGE(dataset.num_features, 256, num_layers=2,
+                  out_channels=dataset.num_classes).to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
 
 
@@ -58,7 +55,8 @@ def train(epoch):
 @torch.no_grad()
 def test():
     model.eval()
-    y_hat = model.inference(subgraph_loader, device=device).argmax(dim=-1)
+    y_hat = model.inference(subgraph_loader, device=device,
+                            progress_bar=True).argmax(dim=-1)
     y = data.y.to(y_hat.device)
 
     accs = []

@@ -55,7 +55,8 @@ def train(epoch):
 @torch.no_grad()
 def test():
     model.eval()
-    y_hat = model.inference(subgraph_loader, device=device,embedding_device=device,
+    y_hat = model.inference(subgraph_loader, device=device,
+                            embedding_device=device,
                             progress_bar=True).argmax(dim=-1)
     y = data.y.to(y_hat.device)
 

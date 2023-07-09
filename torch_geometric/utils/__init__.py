@@ -6,7 +6,6 @@ from .sort import index_sort
 from .degree import degree
 from .softmax import softmax
 from .dropout import dropout_adj, dropout_node, dropout_edge, dropout_path
-from .augmentation import shuffle_node, mask_feature, add_random_edge
 from .sort_edge_index import sort_edge_index
 from .coalesce import coalesce
 from .undirected import is_undirected, to_undirected
@@ -27,7 +26,8 @@ from .to_dense_adj import to_dense_adj
 from .nested import to_nested_tensor, from_nested_tensor
 from .sparse import (dense_to_sparse, is_sparse, is_torch_sparse_tensor,
                      to_torch_coo_tensor, to_torch_csr_tensor,
-                     to_torch_csc_tensor, to_edge_index)
+                     to_torch_csc_tensor, to_torch_sparse_tensor,
+                     to_edge_index)
 from .spmm import spmm
 from .unbatch import unbatch, unbatch_edge_index
 from .one_hot import one_hot
@@ -46,6 +46,7 @@ from .random import (erdos_renyi_graph, stochastic_blockmodel_graph,
 from .negative_sampling import (negative_sampling, batched_negative_sampling,
                                 structured_negative_sampling,
                                 structured_negative_sampling_feasible)
+from .augmentation import shuffle_node, mask_feature, add_random_edge
 from .tree_decomposition import tree_decomposition
 from .embedding import get_embeddings
 from .trim_to_layer import trim_to_layer
@@ -61,9 +62,6 @@ __all__ = [
     'dropout_edge',
     'dropout_path',
     'dropout_adj',
-    'shuffle_node',
-    'mask_feature',
-    'add_random_edge',
     'sort_edge_index',
     'coalesce',
     'is_undirected',
@@ -99,6 +97,7 @@ __all__ = [
     'to_torch_coo_tensor',
     'to_torch_csr_tensor',
     'to_torch_csc_tensor',
+    'to_torch_sparse_tensor',
     'to_edge_index',
     'spmm',
     'unbatch',
@@ -128,6 +127,9 @@ __all__ = [
     'batched_negative_sampling',
     'structured_negative_sampling',
     'structured_negative_sampling_feasible',
+    'shuffle_node',
+    'mask_feature',
+    'add_random_edge',
     'tree_decomposition',
     'get_embeddings',
     'trim_to_layer',

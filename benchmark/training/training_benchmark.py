@@ -17,6 +17,7 @@ from benchmark.utils import (
     test,
     write_to_csv,
 )
+from torch_geometric import compile
 from torch_geometric.loader import NeighborLoader
 from torch_geometric.nn import PNAConv
 from torch_geometric.profile import rename_profile_file, timeit, torch_profile
@@ -35,7 +36,7 @@ def train_homo(model, loader, optimizer, device, progress_bar=True, desc="",
     for batch in loader:
         optimizer.zero_grad()
         batch = batch.to(device)
-        if hasattr(batch, 'adj_t'):
+        if 'adj_t' in batch:
             edge_index = batch.adj_t
         else:
             edge_index = batch.edge_index
@@ -66,7 +67,7 @@ def train_hetero(model, loader, optimizer, device, progress_bar=True, desc="",
     for batch in loader:
         optimizer.zero_grad()
         batch = batch.to(device)
-        if len(batch.adj_t_dict) > 0:
+        if 'adj_t' in batch:
             edge_index_dict = batch.adj_t_dict
         else:
             edge_index_dict = batch.edge_index_dict
@@ -148,7 +149,6 @@ def run(args: argparse.ArgumentParser):
                         data,
                         input_nodes=mask,
                         sampler=sampler,
-                        filter_per_worker=args.filter_per_worker,
                         **kwargs,
                     )
                     if args.evaluate:
@@ -156,14 +156,12 @@ def run(args: argparse.ArgumentParser):
                             data,
                             input_nodes=val_mask,
                             sampler=None,
-                            filter_per_worker=args.filter_per_worker,
                             **kwargs,
                         )
                         test_loader = NeighborLoader(
                             data,
                             input_nodes=test_mask,
                             sampler=None,
-                            filter_per_worker=args.filter_per_worker,
                             **kwargs,
                         )
                     for hidden_channels in args.num_hidden_channels:
@@ -194,6 +192,10 @@ def run(args: argparse.ArgumentParser):
                             metadata=data.metadata() if hetero else None)
                         model = model.to(device)
                         model.train()
+
+                        if args.compile:
+                            model = compile(model, dynamic=True)
+
                         optimizer = torch.optim.Adam(model.parameters(),
                                                      lr=0.001)
 
@@ -326,8 +328,6 @@ if __name__ == '__main__':
         help="Use DataLoader affinitzation.")
     add('--loader-cores', nargs='+', default=[], type=int,
         help="List of CPU core IDs to use for DataLoader workers.")
-    add('--filter-per-worker', action='store_true',
-        help='Enable filter-per-worker feature of the dataloader.')
     add('--measure-load-time', action='store_true')
     add('--evaluate', action='store_true')
     add('--write-csv', choices=[None, 'bench', 'prof'], default=None,
@@ -335,6 +335,7 @@ if __name__ == '__main__':
     add('--export-chrome-trace', default=True, type=bool,
         help='Export chrome trace file. Works only with PyTorch profiler')
     add('--trim', action='store_true', help="Use `trim_to_layer` optimization")
+    add('--compile', action='store_true')
     args = argparser.parse_args()
 
     run(args)

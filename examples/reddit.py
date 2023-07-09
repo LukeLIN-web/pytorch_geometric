@@ -23,8 +23,12 @@ train_loader = NeighborLoader(data, input_nodes=data.train_mask,
 subgraph_loader = NeighborLoader(data, input_nodes=None, num_neighbors=[-1],
                                  shuffle=False, **kwargs)
 
-model = GraphSAGE(dataset.num_features, 256, num_layers=2,
-                  out_channels=dataset.num_classes, ).to(device)
+model = GraphSAGE(
+    dataset.num_features,
+    256,
+    num_layers=2,
+    out_channels=dataset.num_classes,
+).to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
 
 

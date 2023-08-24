@@ -71,6 +71,7 @@ from .dgraph import DGraphFin
 from .hydro_net import HydroNet
 from .airfrans import AirfRANS
 from .jodie import JODIEDataset
+from .wikidata import Wikidata5M
 
 from .dbp15k import DBP15K
 from .aminer import AMiner
@@ -86,6 +87,7 @@ from .taobao import Taobao
 from .igmc_dataset import IGMCDataset
 from .amazon_book import AmazonBook
 from .hm import HM
+from .ose_gvcs import OSE_GVCS
 
 from .fake import FakeDataset, FakeHeteroDataset
 from .sbm_dataset import StochasticBlockModelDataset
@@ -173,6 +175,7 @@ homo_datasets = [
     'HydroNet',
     'AirfRANS',
     'JODIEDataset',
+    'Wikidata5M',
 ]
 
 hetero_datasets = [
@@ -190,6 +193,7 @@ hetero_datasets = [
     'IGMCDataset',
     'AmazonBook',
     'HM',
+    'OSE_GVCS',
 ]
 synthetic_datasets = [
     'FakeDataset',

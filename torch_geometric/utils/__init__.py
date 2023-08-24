@@ -7,6 +7,7 @@ from .degree import degree
 from .softmax import softmax
 from .dropout import dropout_adj, dropout_node, dropout_edge, dropout_path
 from .sort_edge_index import sort_edge_index
+from .lexsort import lexsort
 from .coalesce import coalesce
 from .undirected import is_undirected, to_undirected
 from .loop import (contains_self_loops, remove_self_loops,
@@ -50,6 +51,7 @@ from .augmentation import shuffle_node, mask_feature, add_random_edge
 from .tree_decomposition import tree_decomposition
 from .embedding import get_embeddings
 from .trim_to_layer import trim_to_layer
+from .ppr import get_ppr
 from .train_test_split_edges import train_test_split_edges
 
 __all__ = [
@@ -63,6 +65,7 @@ __all__ = [
     'dropout_path',
     'dropout_adj',
     'sort_edge_index',
+    'lexsort',
     'coalesce',
     'is_undirected',
     'to_undirected',
@@ -133,6 +136,7 @@ __all__ = [
     'tree_decomposition',
     'get_embeddings',
     'trim_to_layer',
+    'get_ppr',
     'train_test_split_edges',
 ]
 
